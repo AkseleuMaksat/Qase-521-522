@@ -1,4 +1,4 @@
-package kz.Akseleu;
+package kz.Akseleu.enam;
 public enum Status {
     DRAFT("Черновик"),
     POSTED("Проведен"),
