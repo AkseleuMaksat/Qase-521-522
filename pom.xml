@@ -75,6 +75,12 @@
             <version>${allure.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Selenium: ручное обновление до совместимой версии -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.30.0</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -12,10 +12,8 @@ public class SecondPage {
     private final SelenideElement buttonRegistration = $x("//a[contains(., 'Списание')]");
 
     public void openProductsPage() {
-        Allure.step("Открытие страницы списание", () -> {
-            buttonProducts.shouldBe(visible, Duration.ofSeconds(10)).click();
-            buttonRegistration.shouldBe(visible).click();
-        });
+        buttonProducts.shouldBe(visible, Duration.ofSeconds(10)).click();
+        buttonRegistration.shouldBe(visible).click();
     }
 
- }
+}

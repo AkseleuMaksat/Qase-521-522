@@ -15,11 +15,9 @@ public class MainPage {
    }
 
    public void authorization(String text, String password){
-       Allure.step("Авторизация", () -> {
-           loginInput.setValue(text);
-           passwordInput.setValue(password);
-           passwordInput.sendKeys(Keys.ENTER);
-       });
+       loginInput.setValue(text);
+       passwordInput.setValue(password);
+       passwordInput.sendKeys(Keys.ENTER);
    }
 
 }

@@ -29,7 +29,6 @@ public class RegistrationPage {
     private final SelenideElement buttonDownloadDiv = $x("//p-tieredmenusub//li");
 
     public void documentStatus() {
-        Allure.step("Установка статусов документа: Черновик, Проведен, Удален", () -> {
             lang.doubleClick();
             buttonFilter.shouldBe(visible, Duration.ofSeconds(10)).click();
             clearFilter();
@@ -38,26 +37,20 @@ public class RegistrationPage {
             selectFromDropdown(Status.DELETED.getStatus());
             selectFromDropdown(Status.POSTED.getStatus());
             selectFromDropdown(Status.DRAFT.getStatus());
-        });
     }
     public void selectUser() {
-        Allure.step("Выбор пользователя из dropdown", () -> {
-            userDropdown.shouldBe(visible).click();
-            user.get(0).shouldBe(visible).click();
-            summit.shouldBe(visible).click();
-        });
+        userDropdown.shouldBe(visible).click();
+        user.get(0).shouldBe(visible).click();
+        summit.shouldBe(visible).click();
+
     }
 
     private void clearFilter() {
-        Allure.step("Очистка фильтров", () -> {
-            clearFilter.click();
-        });
+        clearFilter.click();
     }
     private void selectFromDropdown(String valueToSelect) {
-        Allure.step("Выбор значения '" + valueToSelect + "' из dropdown", () -> {
-            SelenideElement listItem = $x("//khan-dropdown-list-item//label[contains(text(), '" + valueToSelect + "')]")
-                    .shouldBe(Condition.visible);
-            listItem.click();
-        });
+        SelenideElement listItem = $x("//khan-dropdown-list-item//label[contains(text(), '" + valueToSelect + "')]")
+                .shouldBe(Condition.visible);
+        listItem.click();
     }
 }
