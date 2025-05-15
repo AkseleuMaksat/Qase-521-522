@@ -3,15 +3,16 @@ package kz.Akseleu.pages;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
-import kz.Akseleu.enam.Status;
+import kz.Akseleu.enums.Status;
+import org.apache.commons.math3.analysis.function.Constant;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Locale;
 
-import static com.codeborne.selenide.Condition.*;
+import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.*;
 
 public class RegistrationPage {
@@ -24,10 +25,15 @@ public class RegistrationPage {
     private final SelenideElement buttonSummit = $x("//span[text()='Применить']");
     private final SelenideElement lang = $("app-language-selector");
     private final SelenideElement clearFilter = $x("//span[contains(text(), 'Очистить')]/..");
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private final SelenideElement textUserBox = $x("//input[@role ='searchbox']");
+    private final SelenideElement startDayBox = $x("(//input[@role='combobox'])[1]");
+    private final SelenideElement endDayBox = $x("(//input[@role='combobox'])[2]");
+
+    private final SelenideElement statusDocumentDiv = $x("//khan-dropdown-ui-decorator//div//div//div");
+    private final static DateTimeFormatter FORMATTERDAYMONTH = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 
     public void deletedCheckBox() {
-        selectFromDropdown(Status.DELETED.getStatus());
+        selectFromDropdown(Status.DELETED.get());
     }
     public void selectUser(String username) {
         for (int i = 0; i < user.size(); i++) {
@@ -37,6 +43,10 @@ public class RegistrationPage {
             }
         }
     }
+    public void setValueUser(String username) {
+        textUserBox.setValue(username);
+    }
+
     public void userDropdown() {
         userDropdown.shouldBe(visible).click();
     }
@@ -53,6 +63,16 @@ public class RegistrationPage {
     public void monthButton() {
         buttonMonth.shouldBe(visible, Duration.ofSeconds(10)).click();
     }
+    public LocalDate startDay() {
+        return LocalDate.parse(startDayBox.getValue() + "-" + Year.now().getValue(), FORMATTERDAYMONTH);
+    }
+    public LocalDate endDay() {
+        return LocalDate.parse(endDayBox.getValue() + "-" + Year.now().getValue(), FORMATTERDAYMONTH);
+    }
+    public LocalDate today(){
+        String now = LocalDate.now().format(FORMATTERDAYMONTH);
+        return LocalDate.parse(now, FORMATTERDAYMONTH);
+    }
     public void statusDocument(){
         buttonDropdown.shouldBe(visible, Duration.ofSeconds(10)).click();
     }
@@ -64,5 +84,9 @@ public class RegistrationPage {
         SelenideElement listItem = $x("//khan-dropdown-list-item//label[contains(text(), '" + valueToSelect + "')]")
                 .shouldBe(Condition.visible);
         listItem.click();
+    }
+
+    public String textDropdown() {
+        return statusDocumentDiv.getText();
     }
 }

@@ -9,10 +9,11 @@ import static com.codeborne.selenide.Selenide.closeWebDriver;
 
 abstract public class BaseTest {
     @BeforeEach
-    public void init(){
+    public void init() {
         Configuration.pageLoadTimeout = 90000;
         Selenide.open();
     }
+
     @AfterEach
     public void after() {
         closeWebDriver();

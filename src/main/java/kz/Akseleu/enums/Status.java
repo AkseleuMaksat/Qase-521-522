@@ -1,4 +1,5 @@
-package kz.Akseleu.enam;
+package kz.Akseleu.enums;
+
 public enum Status {
     DRAFT("Черновик"),
     POSTED("Проведен"),
@@ -9,7 +10,7 @@ public enum Status {
         this.displayName = displayName;
     }
 
-    public String getStatus() {
+    public String get() {
         return displayName;
     }
 }
