@@ -19,5 +19,5 @@ mvnw.cmd
 .DS_Store
 Thumbs.db
 
-.allure
-allure-reports
+.allure/
+allure-results/

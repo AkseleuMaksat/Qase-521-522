@@ -2,7 +2,7 @@ package kz.Akseleu.enums;
 
 public enum Status {
     DRAFT("Черновик"),
-    POSTED("Проведен"),
+    PROVIDED("Проведен"),
     DELETED("Удален");
     private final String displayName;
 
