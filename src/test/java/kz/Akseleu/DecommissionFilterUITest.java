@@ -5,6 +5,8 @@ import kz.Akseleu.enums.Status;
 import kz.Akseleu.helper.TableHelper;
 import kz.Akseleu.pages.AuthorizationPage;
 import kz.Akseleu.pages.DecommissionPage;
+import kz.Akseleu.pages.ProductPage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -16,11 +18,16 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DecommissionFilterUITest extends BaseTest {
     private final TableHelper tableHelper = new TableHelper();
     private final DecommissionPage decommissionPage = new DecommissionPage();
+    private final ProductPage productPage = new ProductPage();
+
+    @BeforeEach
+    public void login() {
+        AuthorizationPage auth = AuthorizationPage.open();
+        auth.authorization(Constants.LOGIN, Constants.PASSWORD);
+    }
 
     @Test
     public void woper522() {
-        AuthorizationPage auth = AuthorizationPage.open();
-        auth.authorization(Constants.LOGIN, Constants.PASSWORD);
         step("Открыта страница \"Списание\"", decommissionPage::open);
         step("Нажать на кнопку \"Фильтр\"", () -> {
             decommissionPage.filterButton();
@@ -43,15 +50,15 @@ public class DecommissionFilterUITest extends BaseTest {
             decommissionPage.statusDocument();
             step("Появляется выпадающий список в виде чек-бокса со статусами " +
                     "\"Черновик\", \"Проведен\", \"Удален\"", () -> {
-                assertEquals(3, decommissionPage.dropDownList().size());
-                assertTrue(decommissionPage.dropDownList().contains(Status.PROVIDED.get()), "Проведен не виден");
-                assertTrue(decommissionPage.dropDownList().contains(Status.DRAFT.get()), "Черновик не виден");
-                assertTrue(decommissionPage.dropDownList().contains(Status.DELETED.get()), "Удален не виден");
+                assertEquals(3, decommissionPage.statusDropDownList().size());
+                assertTrue(decommissionPage.statusDropDownList().contains(Status.PROVIDED.get()), "Проведен не виден");
+                assertTrue(decommissionPage.statusDropDownList().contains(Status.DRAFT.get()), "Черновик не виден");
+                assertTrue(decommissionPage.statusDropDownList().contains(Status.DELETED.get()), "Удален не виден");
             });
             step("Выбрать чек-бокс \"Удален\"", () -> {
                 decommissionPage.selectFromDropdown(Status.DELETED);
                 step("В поле \"Статус документа\" - отображается \"Удален\"", () ->
-                        assertEquals(decommissionPage.textDropdown(), Status.DELETED.get(),
+                        assertEquals(decommissionPage.statusTextDropdown(), Status.DELETED.get(),
                                 "Статус документа не выбран Удален"));
             });
         });
@@ -74,7 +81,9 @@ public class DecommissionFilterUITest extends BaseTest {
                             this::checkTableDate));
             step("Проверить колонку \"Статус\"", () ->
                     step("В колонке \"Статус\" у документов отображается только статус \"Удален\"",
-                            this::checkTableStatus));
+                            () -> checkTableStatus(List.of(Status.DELETED.get()))
+                    )
+            );
             step("Проверить колонку \"Пользователи\"", () ->
                     step("В колонке \"Пользователь\" у документов отображается только пользователь" + Constants.USERNAME,
                             this::checkTableName));
@@ -82,12 +91,187 @@ public class DecommissionFilterUITest extends BaseTest {
                     step("В Чипсах списка документов отображаются фильтры: Дата текущего месяца " +
                             "Статус документа \"Удален\" Пользователь " + Constants.FULL_NAME, () -> {
                         checkChipDate(Constants.START_CURRENT_MONTH, Constants.END_CURRENT_MONTH);
-                        checkChipStatus(Status.DELETED);
+                        checkChipStatus();
                         checkChipUser(Constants.FULL_NAME);
             }));
         });
     }
+    @Test
+    public void woper521(){
+        step("Открыта страница \"Списание\"", decommissionPage::open);
+        step("Нажать на кнопку \"Фильтр\"", () -> {
+            decommissionPage.filterButton();
+            step("Открывается модальное окно фильтра", decommissionPage::filterPanelExist);
+        });
+        step("Выбрать таб \"Неделя\"", () -> {
+            decommissionPage.weekButton();
+            step("В поле \"Дэйтскролл\" -  отображаются даты текущей недели", () ->
+                    assertTrue(
+                            (decommissionPage.today().isEqual(decommissionPage.startDay())
+                                    || decommissionPage.today().isAfter(decommissionPage.startDay()))
+                                    && (decommissionPage.today().isEqual(decommissionPage.endDay())
+                                    || decommissionPage.today().isBefore(decommissionPage.endDay())),
+                            "Дата " + decommissionPage.today() + " должна быть между " + decommissionPage.startDay()
+                                    + " и " + decommissionPage.endDay()
+                    ));
+        });
+        step("В поле \"Статус документа\" выбраны статус Проведен и черновик", () -> {
+            decommissionPage.statusDocument();
+            decommissionPage.selectFromDropdown(Status.PROVIDED);
+            decommissionPage.selectFromDropdown(Status.DRAFT);
+            decommissionPage.statusDocument();
+        });
 
+        step("Ввести в поле \"Поиск по штрихкоду и названию\" название товара "+Constants.BARCODE, () -> {
+            decommissionPage.clickBarcodeInput();
+            decommissionPage.setBarcodeInput(Constants.BARCODE);
+            step("Название товара отображается в поле \"Поиск по штрихкоду и названию\"", () ->{
+                assertEquals(decommissionPage.barCodeText(), Constants.BARCODE);
+            } );
+        });
+        step("Нажать на кнопку \"Применить\"", () -> {
+            decommissionPage.clickSummit();
+            step("Проверить колонку \"Дата\"", () ->
+                    step("В колонке \"Дата\" отображаются документы только с датами текущей недели",
+                            this::checkTableDate));
+            step("Проверить колонку \"Статус\"", () ->
+                    step("В колонке \"Статус\" у документов отображаются статусы \"Проведен\" и \"Черновик\"",()->
+                            checkTableStatus(List.of( Status.DRAFT.get(), Status.PROVIDED.get()))));
+            step("Проверить \"Чипсы\" списка документов", () ->
+                    step("В Чипсах списка документов отображаются фильтры: Дата за нынешнюю неделю" +
+                            " Статус документа: \""+Status.DRAFT.get()+"\", \""+Status.PROVIDED.get()+"\"" +
+                            " Штрихкод и Название: "+Constants.BARCODE, () -> {
+                        checkChipDate(Constants.START_CURRENT_WEEK, Constants.END_CURRENT_WEEK);
+                        checkChipStatus();
+                        checkChipBarCode(Constants.BARCODE);
+                    }));
+        });
+
+        step("Нажать на номер первого документа в списке", () -> {
+            step("Открывается документ списания", () -> decommissionPage.openFirstDocument());
+            step("В поле \"Поиск по таблице\" ввести название товара", ()->{
+                productPage.setSearchText();
+                tableHelper.loaderDisappear();
+                step("Поле заполнено",sub->{
+                    sub.parameter("Поле заполнено", Constants.BARCODE);
+                    assertEquals(Constants.BARCODE,productPage.checkSearchLine(),"Поле не заполнено");
+                });
+                step("В таблице товаров будет отображаться товар с данным названием", this::checkTableBarCode);
+            });
+            step("Нажать кнопку \"Закрыть\"",()->{
+               productPage.clickCloseButton();
+               tableHelper.loaderDisappear();
+               step("Появляется диалоговое окно \"Подтверждение действия\"",()->{
+                   productPage.checkDynamicLogger();
+               });
+               step("Нажать кнопку \"Да\"", ()->{
+                   productPage.clickYesButtonForLogger(productPage.checkDynamicLogger());
+                   step("Документ закрывается Открывается страница с списком документов", ()->{
+                       productPage.inputShouldNotExist();
+                       decommissionPage.shouldBeTable();
+                   });
+               });
+            });
+        });
+        step("Повторить шаги 5.1, 5.2, 5.3", () -> {
+            checkTableDate();
+            checkTableStatus(List.of( Status.DRAFT.get(), Status.PROVIDED.get()));
+            checkChipDate(Constants.START_CURRENT_WEEK, Constants.END_CURRENT_WEEK);
+            checkChipStatus();
+            checkChipBarCode(Constants.BARCODE);
+        });
+        step("Нажать на номер второго документа в списке", () -> {
+            step("Открывается документ списания", () -> decommissionPage.openSecondProduct());
+            step("В поле \"Поиск по таблице\" ввести название товара", ()->{
+                productPage.setSearchText();
+                tableHelper.loaderDisappear();
+                step("Поле заполнено",()->{
+                    assertEquals(Constants.BARCODE, productPage.checkSearchLine(),"Поле не заполнено");
+                });
+                step("В таблице товаров будет отображаться товар с данным названием", this::checkTableBarCode);
+            });
+            step("Нажать кнопку \"Закрыть\"",()->{
+                productPage.clickCloseButton();
+                tableHelper.loaderDisappear();
+                step("Появляется диалоговое окно \"Подтверждение действия\"",()->{
+                    productPage.checkDynamicLogger();
+                });
+                step("Нажать кнопку \"Да\"", ()->{
+                    productPage.clickYesButtonForLogger(productPage.checkDynamicLogger());
+                    step("Документ закрывается Открывается страница с списком документов", ()->{
+                        productPage.inputShouldNotExist();
+                        decommissionPage.shouldBeTable();
+                    });
+                });
+            });
+        });
+        step("Нажать на номер последнего документа в списке",()->{
+            step("Открывается документ списания", () -> decommissionPage.openLastProduct());
+            step("В поле \"Поиск по таблице\" ввести название товара", ()->{
+                productPage.setSearchText();
+                tableHelper.loaderDisappear();
+                step("Поле заполнено",()->{
+                    assertEquals(Constants.BARCODE,productPage.checkSearchLine(),"Поле не заполнено");
+                });
+                step("В таблице товаров будет отображаться товар с данным названием", this::checkTableBarCode);
+            });
+            step("Нажать кнопку \"Закрыть\"",()->{
+                productPage.clickCloseButton();
+                tableHelper.loaderDisappear();
+                step("Появляется диалоговое окно \"Подтверждение действия\"",()->{
+                    productPage.checkDynamicLogger();
+                });
+                step("Нажать кнопку \"Да\"", ()->{
+                    productPage.clickYesButtonForLogger(productPage.checkDynamicLogger());
+                    step("Документ закрывается Открывается страница с списком документов", ()->{
+                        productPage.inputShouldNotExist();
+                        decommissionPage.shouldBeTable();
+                    });
+                });
+            });
+        });
+        step("Повторить шаги 6, 7 и 8 для документов со второй и последней страницы",()->{
+            //6
+            decommissionPage.openFirstDocument();
+            productPage.setSearchText();
+            tableHelper.loaderDisappear();
+            assertEquals(Constants.BARCODE,productPage.checkSearchLine(),"Поле не заполнено");
+            checkTableBarCode();
+            productPage.clickCloseButton();
+            tableHelper.loaderDisappear();
+            productPage.checkDynamicLogger();
+            productPage.clickYesButtonForLogger(productPage.checkDynamicLogger());
+            productPage.inputShouldNotExist();
+            decommissionPage.shouldBeTable();
+            //7
+            checkTableDate();
+            checkTableStatus(List.of( Status.DRAFT.get(), Status.PROVIDED.get()));
+            checkChipDate(Constants.START_CURRENT_WEEK, Constants.END_CURRENT_WEEK);
+            checkChipStatus();
+            checkChipBarCode(Constants.BARCODE);
+            //8
+            decommissionPage.openSecondProduct();
+            productPage.setSearchText();
+            tableHelper.loaderDisappear();
+            assertEquals(Constants.BARCODE, productPage.checkSearchLine(),"Поле не заполнено");
+            productPage.clickCloseButton();
+            tableHelper.loaderDisappear();
+            productPage.checkDynamicLogger();
+            productPage.clickYesButtonForLogger(productPage.checkDynamicLogger());
+            productPage.inputShouldNotExist();
+            decommissionPage.shouldBeTable();
+        });
+    }
+    private void checkTableBarCode(){
+        for (String list : tableHelper.getColumnData(productPage.getTableRow(),"Название товара")){
+            assertEquals(Constants.BARCODE, list.trim(),"Штрих код не найден");
+        }
+    }
+
+    private void checkChipBarCode(String username) {
+        assertEquals(username, decommissionPage.barCodeFormated(),
+                "В chip неправильный username");
+    }
     private void checkTableDate() {
         for (String listOfDate : tableHelper.getColumnData(decommissionPage.getTableRows(), "Дата")) {
             String dateOnly = listOfDate.split("\\|")[0].trim();
@@ -100,11 +284,11 @@ public class DecommissionFilterUITest extends BaseTest {
         }
     }
 
-    private void checkTableStatus() {
-        for (String status : tableHelper.getColumnData(decommissionPage.getTableRows(), "Статус документа")) {
+    private void checkTableStatus(List<String> expectedValues) {
+        for (String actualValue : tableHelper.getColumnData(decommissionPage.getTableRows(), "Статус документа")) {
             assertTrue(
-                    status.equals("Проведен") || status.equals("Удален"),
-                    "Статус должен быть 'Проведен' или 'Удален', но был: " + status
+                    expectedValues.contains(actualValue),
+                    "Статус должно быть одним из '"+expectedValues+"', но был: " + actualValue
             );
         }
     }
@@ -128,10 +312,31 @@ public class DecommissionFilterUITest extends BaseTest {
         );
     }
 
-    private void checkChipStatus(Status status) {
-        assertEquals(status.get(), decommissionPage.statusFormated(),
-                "В chip неправильный status");
+    private void checkChipStatus() {
+        String needCheckText = decommissionPage.statusFormated().trim();
+        if(needCheckText.contains(",")){
+            String[] parts = needCheckText.split(",");
+            for (String status : parts) {
+                checkStatusAgainstEnum(status);
+            }
+        }else {
+            checkStatusAgainstEnum(needCheckText);
+        }
+    }
+    private void checkStatusAgainstEnum(String status) {
+        boolean statusAgainstEnum = false;
+        String statusValue ="";
+        for (Status statu : Status.values()) {
+            if(statu.get().equals(status)){
+                statusValue= statu.get();
+                statusAgainstEnum = true;
+                break;
 
+            }
+        }
+        if(statusAgainstEnum){
+            assertEquals(statusValue, status, "В Chip неправильный status");
+        }
     }
 
     private void checkChipUser(String username) {
