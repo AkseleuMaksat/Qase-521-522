@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static io.qameta.allure.Allure.step;
@@ -81,7 +83,7 @@ public class DecommissionFilterUITest extends BaseTest {
                             this::checkTableDate));
             step("Проверить колонку \"Статус\"", () ->
                     step("В колонке \"Статус\" у документов отображается только статус \"Удален\"",
-                            () -> checkTableStatus(List.of(Status.DELETED.get()))
+                            () -> checkTableStatus(Status.DELETED)
                     )
             );
             step("Проверить колонку \"Пользователи\"", () ->
@@ -136,7 +138,7 @@ public class DecommissionFilterUITest extends BaseTest {
                             this::checkTableDate));
             step("Проверить колонку \"Статус\"", () ->
                     step("В колонке \"Статус\" у документов отображаются статусы \"Проведен\" и \"Черновик\"",()->
-                            checkTableStatus(List.of( Status.DRAFT.get(), Status.PROVIDED.get()))));
+                            checkTableStatus(Status.DRAFT, Status.PROVIDED)));
             step("Проверить \"Чипсы\" списка документов", () ->
                     step("В Чипсах списка документов отображаются фильтры: Дата за нынешнюю неделю" +
                             " Статус документа: \""+Status.DRAFT.get()+"\", \""+Status.PROVIDED.get()+"\"" +
@@ -175,7 +177,7 @@ public class DecommissionFilterUITest extends BaseTest {
         });
         step("Повторить шаги 5.1, 5.2, 5.3", () -> {
             checkTableDate();
-            checkTableStatus(List.of( Status.DRAFT.get(), Status.PROVIDED.get()));
+            checkTableStatus(Status.DRAFT, Status.PROVIDED);
             checkChipDate(Constants.START_CURRENT_WEEK, Constants.END_CURRENT_WEEK);
             checkChipStatus();
             checkChipBarCode(Constants.BARCODE);
@@ -245,7 +247,7 @@ public class DecommissionFilterUITest extends BaseTest {
             decommissionPage.shouldBeTable();
             //7
             checkTableDate();
-            checkTableStatus(List.of( Status.DRAFT.get(), Status.PROVIDED.get()));
+            checkTableStatus(Status.DRAFT, Status.PROVIDED);
             checkChipDate(Constants.START_CURRENT_WEEK, Constants.END_CURRENT_WEEK);
             checkChipStatus();
             checkChipBarCode(Constants.BARCODE);
@@ -284,11 +286,13 @@ public class DecommissionFilterUITest extends BaseTest {
         }
     }
 
-    private void checkTableStatus(List<String> expectedValues) {
+    private void checkTableStatus(Status... expectedValues) {
+        List<String> statuses = new ArrayList<>();
+        Arrays.asList(expectedValues).forEach(status -> statuses.add(status.get()));
         for (String actualValue : tableHelper.getColumnData(decommissionPage.getTableRows(), "Статус документа")) {
             assertTrue(
-                    expectedValues.contains(actualValue),
-                    "Статус должно быть одним из '"+expectedValues+"', но был: " + actualValue
+                    statuses.contains(actualValue),
+                    "Статус должно быть одним из '"+ statuses +"', но был: " + actualValue
             );
         }
     }
