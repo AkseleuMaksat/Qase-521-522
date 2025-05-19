@@ -41,8 +41,8 @@
 - Java 17+
 - JUnit 5
 - Allure
-- Selenide / Selenium *(предполагается)*
-- Gradle или Maven *(в зависимости от сборщика проекта)*
+- Selenide
+- Maven
 
 ---
 
